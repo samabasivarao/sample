@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="f82a14d1-36b9-4ac8-b40c-c1a68035e0b9" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="765baef0-2415-4177-bbdc-707dc4bd416e" >
+		<salesforce:basic-connection username="samabasivarao@apicentrics.com" password="Dream2Big@" securityToken="pdmyV5lm3K8UfbkFL5OmCxEq" />
+	</salesforce:sfdc-config>
+	<flow name="sf-denvarFlow" doc:id="7907f51b-ced6-4761-a96f-d7f81b8a041a" >
+		<http:listener doc:name="Listener" doc:id="f525c80c-4021-4169-b5ec-f4f928e6718b" config-ref="HTTP_Listener_config" path="/query"/>
+		<salesforce:query doc:name="Query" doc:id="be4e50db-d1ea-4dbd-b618-ea35d80a165e" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT Id,s_no__c,Name__c,Designation__c,Email__c FROM training__c]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="d3acd322-670d-439f-bc10-a40af8cdc26b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-denvarFlow1" doc:id="57de95dc-d262-4370-9ddb-7f7df570d93f" >
+		<http:listener doc:name="Listener" doc:id="e7435707-8fda-4007-af46-6fe66a5b6bb2" config-ref="HTTP_Listener_config" path="/insert"/>
+		<ee:transform doc:name="Transform Message" doc:id="b05560ea-4935-46d7-8593-206026380406" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map 
+    {
+        "Name__c": $.name,
+        "Designation__c": $.design
+    }	
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create doc:name="Create" doc:id="b660440e-841b-4ee9-9d54-c0b289ac437a" config-ref="Salesforce_Config" type="training__c"/>
+		<ee:transform doc:name="Transform Message" doc:id="8bfdc663-60ee-4bb4-a6c9-623b70c44cc4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-denvarFlow2" doc:id="b48ff4e7-7248-4c5d-a15c-a545e540494c" >
+		<http:listener doc:name="Listener" doc:id="225df756-9ed3-40dc-8d2e-21e8c4ebde05" config-ref="HTTP_Listener_config" path="/update"/>
+		<ee:transform doc:name="Transform Message" doc:id="cc6b5c25-d5cb-4f2e-b9fd-3c188998acca">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map 
+    {
+        "Name__c": $.name,
+        "Designation__c": $.design,
+        "Email__c" :$.Email,
+        "Id" : $.Id
+    }	 
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:update doc:name="Update" doc:id="5882c6dd-83d1-4c70-a8d0-8db8951a1293" config-ref="Salesforce_Config" type="training__c"/>
+		<ee:transform doc:name="Transform Message" doc:id="e338a6ef-a136-42eb-ac10-8a310863f8df" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-denvarFlow3" doc:id="ac3b701c-cbd6-4d66-bdca-1554290d617e" >
+		<http:listener doc:name="Listener" doc:id="c3275388-053a-4b99-ac89-4431bf86e745" config-ref="HTTP_Listener_config" path="/delete"/>
+		<salesforce:delete doc:name="Delete" doc:id="f7e099dd-cb9f-433b-8bf7-dc1b5fd85306" config-ref="Salesforce_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="bcee152a-9ec8-4f5e-8076-0e3f6b8cbb42" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-denvarFlow4" doc:id="71ee6673-268c-4d1c-a86f-6ce389936a87" >
+		<http:listener doc:name="Listener" doc:id="fbfca4d7-d47b-4143-9c56-92a0fef5c6f1" config-ref="HTTP_Listener_config" path="/upsert"/>
+		<ee:transform doc:name="Transform Message" doc:id="91adefe3-da61-47cf-842c-a00913cbac45" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map 
+    {
+        "Name__c": $.name,
+        "Designation__c": $.design,
+        "Email__c" :$.Email
+    }	 
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert doc:name="Upsert" doc:id="3e465f28-1a93-4664-a207-1205205748cf" config-ref="Salesforce_Config" objectType="training__c" externalIdFieldName="Email__c"/>
+		<ee:transform doc:name="Transform Message" doc:id="2e1b4d5c-6637-4156-b847-7d3bec585b06" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-denvarFlow5" doc:id="d244aba2-4d0c-4308-bd62-54f9bac5a23b" >
+		<http:listener doc:name="Listener" doc:id="64dbbd16-884e-4753-aec3-981f664477b3" config-ref="HTTP_Listener_config" path="/qll"/>
+		<salesforce:query-all doc:name="Query all" doc:id="487913ef-d0df-4916-8368-9a1b6e73fec5" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT Id,s_no__c,Name__c,Designation__c,Email__c FROM training__c]]></salesforce:salesforce-query>
+		</salesforce:query-all>
+		<ee:transform doc:name="Transform Message" doc:id="2fe20883-5296-4608-84a6-b0c905b15d8b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-denvarFlow6" doc:id="e1bdec5a-cd0d-4364-8caf-3f326699cb67" >
+		<salesforce:replay-channel-listener doc:name="Replay channel listener" doc:id="22605ede-b7cc-4c63-8096-e0e8fa81002d" config-ref="Salesforce_Config" streamingChannel="/data/training__ChangeEvent" replayOption="ONLY_NEW"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f9c67240-8fcf-45d8-8a8a-08092bed71c9" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="023bfd41-fa34-4f86-ac92-5fef3aff2f41" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
